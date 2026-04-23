@@ -1,5 +1,7 @@
 import { Heart } from 'lucide-react';
 import Image from 'next/image';
+import { MainFooter } from '~/components/layouts/main-footer';
+import { MainHeader } from '~/components/layouts/main-header';
 import { Badge } from '~/components/ui/badge';
 import {
   Breadcrumb,
@@ -36,33 +38,7 @@ import { Separator } from '~/components/ui/separator';
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans text-zinc-900 dark:text-zinc-50">
-      {/* Header / Navigation */}
-      <header className="sticky top-0 z-50 w-full border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-md">
-        <div className="container flex h-16 items-center justify-between px-6 mx-auto">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl font-heading font-bold tracking-tighter uppercase italic">V3-X Audio</span>
-          </div>
-          <nav className="hidden md:flex gap-8 text-sm font-medium tracking-tight uppercase">
-            <a href="#" className="hover:text-zinc-500 transition-colors">
-              Collection
-            </a>
-            <a href="#" className="hover:text-zinc-500 transition-colors">
-              Technology
-            </a>
-            <a href="#" className="hover:text-zinc-500 transition-colors">
-              Support
-            </a>
-          </nav>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" className="font-mono text-xs tracking-widest uppercase">
-              Cart (0)
-            </Button>
-            <Button size="sm" className="rounded-full px-6 uppercase text-xs tracking-widest font-bold">
-              Shop Now
-            </Button>
-          </div>
-        </div>
-      </header>
+      <MainHeader />
 
       <main className="flex-1">
         {/* Breadcrumb Section */}
@@ -324,17 +300,7 @@ export default function Home() {
         </section>
       </main>
 
-      <footer className="bg-white dark:bg-zinc-950 border-t border-zinc-200 dark:border-zinc-800 py-12">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          <span className="font-heading italic font-bold">V3-X AUDIO</span>
-          <div className="flex gap-8 text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
-            <a href="#">Instagram</a>
-          </div>
-          <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">© 2026 V3-X AUDIO VIETNAM</p>
-        </div>
-      </footer>
+      <MainFooter />
     </div>
   );
 }

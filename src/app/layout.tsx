@@ -23,10 +23,20 @@ export const metadata: Metadata = {
   description: 'Premium Audio Equipment',
 };
 
+import { ThemeProvider } from '~/components/shared/theme-provider';
+
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${ibmPlexMono.variable} ${manrope.variable} ${notoSerif.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html
+      lang="en"
+      className={`${ibmPlexMono.variable} ${manrope.variable} ${notoSerif.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          {children}
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
