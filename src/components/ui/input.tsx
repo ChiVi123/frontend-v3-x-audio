@@ -2,13 +2,42 @@ import type * as React from 'react';
 
 import { cn } from '~/lib/utils';
 
+/**
+ * V3-X Audio Input
+ *
+ * Per DESIGN.md:
+ * "Input Fields: Darker-than-surface background with a subtle bottom border
+ *  that transforms into a full Gold outline when focused."
+ *
+ * Implementation:
+ * - bg: surface-container-low (#1a1c1c) — darker than card surface
+ * - default border: subtle outline-variant (#4d4635)
+ * - focus: full gold ring + gold border color (#f2ca50)
+ * - placeholder: on-surface-variant (#d0c5af) — off-white, low vibration
+ * - text: on-surface (#e3e2e2)
+ */
 function Input({ className, type, ...props }: React.ComponentProps<'input'>) {
   return (
     <input
       type={type}
       data-slot="input"
       className={cn(
-        'h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40',
+        // Layout & shape — 8px radius per DESIGN.md "Small" tier
+        'h-10 w-full min-w-0 rounded-lg px-3 py-2 text-sm',
+        // Typography
+        'font-sans text-[#e3e2e2] placeholder:text-[#99907c]',
+        // Surface: darker-than-card bg + subtle border
+        'bg-[#1a1c1c] border border-[#4d4635]',
+        // Transition: 200ms ease-out per DESIGN.md
+        'transition-all duration-200 ease-out outline-none',
+        // Focus: full gold outline (ring + border color shift)
+        'focus-visible:border-[#f2ca50]/80 focus-visible:ring-2 focus-visible:ring-[#f2ca50]/25',
+        // File input styling
+        'file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-[#e3e2e2]',
+        // Disabled
+        'disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-[#1a1c1c]/50 disabled:opacity-40',
+        // Invalid / error state
+        'aria-invalid:border-[#ffb4ab]/60 aria-invalid:ring-2 aria-invalid:ring-[#ffb4ab]/20',
         className,
       )}
       {...props}
