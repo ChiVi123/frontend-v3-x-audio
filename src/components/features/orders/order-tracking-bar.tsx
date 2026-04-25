@@ -49,13 +49,12 @@ function OrderTrackingBar({ currentStep, className, ...props }: OrderTrackingBar
           {STEPS.slice(0, -1).map(({ key }, i) => {
             const isCompleted = i < currentIdx;
             return (
-              <div key={key} className="flex-1 relative h-px overflow-hidden" style={{ background: '#292a2a' }}>
+              <div key={key} className="flex-1 relative h-px overflow-hidden bg-border">
                 {/* Gold fill for completed segments */}
                 <div
-                  className="absolute inset-y-0 left-0 transition-all duration-500 ease-out"
+                  className="absolute inset-y-0 left-0 transition-all duration-500 ease-out bg-primary"
                   style={{
                     width: isCompleted ? '100%' : '0%',
-                    background: '#f2ca50',
                   }}
                 />
               </div>
@@ -81,19 +80,19 @@ function OrderTrackingBar({ currentStep, className, ...props }: OrderTrackingBar
                 className={cn(
                   'flex size-9 items-center justify-center rounded-full border-2 transition-all duration-300 ease-out',
                   // Completed: gold filled
-                  isCompleted && 'border-[#f2ca50] bg-[#f2ca50]',
+                  isCompleted && 'border-primary bg-primary',
                   // Active: gold border, dark bg, gold icon
-                  isActive && 'border-[#f2ca50] bg-[#1e2020] shadow-[0_0_12px_rgba(242,202,80,0.25)]',
+                  isActive && 'border-primary bg-card shadow-[0_0_12px_rgba(var(--primary),0.25)]',
                   // Future: muted
-                  isFuture && 'border-[#292a2a] bg-[#1a1c1c]',
+                  isFuture && 'border-border bg-surface-container-low',
                 )}
               >
                 <Icon
                   className={cn(
                     'size-4 transition-colors duration-300',
-                    isCompleted && 'text-[#3c2f00]',
-                    isActive && 'text-[#f2ca50]',
-                    isFuture && 'text-[#4d4635]',
+                    isCompleted && 'text-primary-foreground',
+                    isActive && 'text-primary',
+                    isFuture && 'text-outline-variant-brand',
                   )}
                   strokeWidth={isCompleted ? 2.5 : 2}
                 />
@@ -103,9 +102,9 @@ function OrderTrackingBar({ currentStep, className, ...props }: OrderTrackingBar
               <span
                 className={cn(
                   'text-center font-mono text-[10px] font-medium uppercase tracking-wider transition-colors duration-300',
-                  isCompleted && 'text-[#f2ca50]',
-                  isActive && 'text-[#e3e2e2]',
-                  isFuture && 'text-[#4d4635]',
+                  isCompleted && 'text-primary',
+                  isActive && 'text-foreground',
+                  isFuture && 'text-outline-variant-brand',
                 )}
               >
                 {label}

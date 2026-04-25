@@ -79,10 +79,10 @@ function ProductCard({
       data-variant={variant}
       className={cn(
         // Base card surface — surface-container (#1e2020), one step above page bg
-        'group/card relative flex rounded-2xl border border-[#292a2a] bg-[#1e2020]',
+        'group/card relative flex rounded-2xl border border-border bg-card',
         'transition-all duration-200 ease-out',
         // Hover: very subtle border luminosity shift
-        'hover:border-[#4d4635]',
+        'hover:border-outline-brand',
         // Layout by variant
         variant === 'default' && 'flex-col overflow-hidden',
         variant === 'compact' && 'flex-row items-center gap-4 p-3',
@@ -96,7 +96,7 @@ function ProductCard({
         <Link href={href} className="relative block overflow-hidden" tabIndex={-1} aria-hidden>
           <div
             className={cn(
-              'relative w-full overflow-hidden bg-[#1a1c1c]',
+              'relative w-full overflow-hidden bg-surface-container-low',
               variant === 'default' && 'aspect-4/5',
               variant === 'featured' && 'aspect-video',
             )}
@@ -115,13 +115,13 @@ function ProductCard({
             />
 
             {/* Gradient overlay for text legibility if needed */}
-            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#1e2020]/40 via-transparent to-transparent" />
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-card/40 via-transparent to-transparent" />
           </div>
 
           {/* ── Badges overlaid on image ── */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {badge && (
-              <span className="inline-flex items-center rounded-full border border-[#4d4635] bg-[#121414]/80 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-[#f2ca50] backdrop-blur-sm">
+              <span className="inline-flex items-center rounded-full border border-outline-variant-brand bg-background/80 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-primary backdrop-blur-sm">
                 {badge}
               </span>
             )}
@@ -136,16 +136,16 @@ function ProductCard({
 
           {/* In-stock dot — subtle, per home.png mockup */}
           {inventoryStatus === 'in_stock' && (
-            <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full border border-[#6bcf99]/20 bg-[#0a2318]/80 px-2 py-0.5 backdrop-blur-sm">
-              <span className="inline-block size-1.5 rounded-full bg-[#6bcf99]" />
-              <span className="font-mono text-[9px] font-medium uppercase tracking-wider text-[#6bcf99]">In Stock</span>
+            <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full border border-status-delivered-fg/20 bg-status-delivered/80 px-2 py-0.5 backdrop-blur-sm">
+              <span className="inline-block size-1.5 rounded-full bg-status-delivered-fg" />
+              <span className="font-mono text-[9px] font-medium uppercase tracking-wider text-status-delivered-fg">In Stock</span>
             </div>
           )}
         </Link>
       ) : (
         /* Compact: square thumbnail */
         <Link href={href} className="relative shrink-0 overflow-hidden rounded-xl" tabIndex={-1} aria-hidden>
-          <div className="relative size-20 bg-[#1a1c1c]">
+          <div className="relative size-20 bg-surface-container-low">
             <Image
               src={imageSrc}
               alt={imageAlt ?? name}
@@ -162,12 +162,12 @@ function ProductCard({
         {/* Name + wishlist */}
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <Link href={href} className="group/link block outline-none focus-visible:text-[#f2ca50]">
+            <Link href={href} className="group/link block outline-none focus-visible:text-primary">
               <h3
                 className={cn(
-                  'font-heading text-[#e3e2e2] leading-snug',
+                  'font-heading text-foreground leading-snug',
                   'transition-colors duration-200 ease-out',
-                  'group-hover/link:text-[#f2ca50]',
+                  'group-hover/link:text-primary',
                   !isCompact && 'text-xl',
                   isCompact && 'text-base truncate',
                 )}
@@ -176,7 +176,7 @@ function ProductCard({
               </h3>
             </Link>
             {tagline && !isCompact && (
-              <p className="mt-0.5 text-xs text-[#99907c] leading-relaxed line-clamp-2">{tagline}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed line-clamp-2">{tagline}</p>
             )}
           </div>
 
@@ -190,7 +190,7 @@ function ProductCard({
               onClick={() => onWishlistToggle(id)}
             >
               <Heart
-                className={cn('size-4 transition-all duration-200', isWishlisted && 'fill-[#f2ca50] text-[#f2ca50]')}
+                className={cn('size-4 transition-all duration-200', isWishlisted && 'fill-primary text-primary')}
               />
             </Button>
           )}
@@ -209,15 +209,15 @@ function ProductCard({
         <div
           className={cn(
             'flex items-center',
-            !isCompact && 'mt-4 border-t border-[#292a2a] pt-3 justify-between',
+            !isCompact && 'mt-4 border-t border-border pt-3 justify-between',
             isCompact && 'mt-2 justify-between',
           )}
         >
           <span
             className={cn(
               'font-mono font-bold tracking-tight',
-              !isCompact && 'text-xl text-[#f2ca50]',
-              isCompact && 'text-base text-[#f2ca50]',
+              !isCompact && 'text-xl text-primary',
+              isCompact && 'text-base text-primary',
             )}
           >
             {formatPrice(price, currency)}

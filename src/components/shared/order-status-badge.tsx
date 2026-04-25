@@ -26,79 +26,67 @@ type Status = OrderStatus | InventoryStatus;
 
 interface StatusConfig {
   label: string;
-  bg: string;
-  fg: string;
-  border: string;
+  className: string;
+  dotClassName: string;
 }
 
 const STATUS_MAP: Record<Status, StatusConfig> = {
   // Order statuses
   pending: {
     label: 'Pending',
-    bg: '#3a2e10',
-    fg: '#e9c349',
-    border: 'rgba(233,195,73,0.18)',
+    className: 'bg-status-processing border-status-processing-fg/20 text-status-processing-fg',
+    dotClassName: 'bg-status-processing-fg',
   },
   processing: {
     label: 'Processing',
-    bg: '#3a2e10',
-    fg: '#e9c349',
-    border: 'rgba(233,195,73,0.18)',
+    className: 'bg-status-processing border-status-processing-fg/20 text-status-processing-fg',
+    dotClassName: 'bg-status-processing-fg',
   },
   shipped: {
     label: 'Shipped',
-    bg: '#0f2040',
-    fg: '#97b0ff',
-    border: 'rgba(151,176,255,0.18)',
+    className: 'bg-status-shipped border-status-shipped-fg/20 text-status-shipped-fg',
+    dotClassName: 'bg-status-shipped-fg',
   },
   delivered: {
     label: 'Delivered',
-    bg: '#0a2318',
-    fg: '#6bcf99',
-    border: 'rgba(107,207,153,0.18)',
+    className: 'bg-status-delivered border-status-delivered-fg/20 text-status-delivered-fg',
+    dotClassName: 'bg-status-delivered-fg',
   },
   completed: {
     label: 'Completed',
-    bg: '#0a2318',
-    fg: '#6bcf99',
-    border: 'rgba(107,207,153,0.18)',
+    className: 'bg-status-delivered border-status-delivered-fg/20 text-status-delivered-fg',
+    dotClassName: 'bg-status-delivered-fg',
   },
   cancelled: {
     label: 'Cancelled',
-    bg: '#2a1010',
-    fg: '#ffb4ab',
-    border: 'rgba(255,180,171,0.18)',
+    className: 'bg-status-cancelled border-status-cancelled-fg/20 text-status-cancelled-fg',
+    dotClassName: 'bg-status-cancelled-fg',
   },
   refunded: {
     label: 'Refunded',
-    bg: '#2a1010',
-    fg: '#ffb4ab',
-    border: 'rgba(255,180,171,0.18)',
+    className: 'bg-status-cancelled border-status-cancelled-fg/20 text-status-cancelled-fg',
+    dotClassName: 'bg-status-cancelled-fg',
   },
   // Inventory statuses
   in_stock: {
     label: 'In Stock',
-    bg: '#0a2318',
-    fg: '#6bcf99',
-    border: 'rgba(107,207,153,0.18)',
+    className: 'bg-status-delivered border-status-delivered-fg/20 text-status-delivered-fg',
+    dotClassName: 'bg-status-delivered-fg',
   },
   low_stock: {
     label: 'Low Stock',
-    bg: '#2e1f08',
-    fg: '#e9c349',
-    border: 'rgba(233,195,73,0.25)',
+    className: 'bg-status-low-stock border-status-low-stock-fg/20 text-status-low-stock-fg',
+    dotClassName: 'bg-status-low-stock-fg',
   },
   out_of_stock: {
     label: 'Out of Stock',
-    bg: '#2a1010',
-    fg: '#ffb4ab',
-    border: 'rgba(255,180,171,0.18)',
+    className: 'bg-status-cancelled border-status-cancelled-fg/20 text-status-cancelled-fg',
+    dotClassName: 'bg-status-cancelled-fg',
   },
   pre_order: {
     label: 'Pre-order',
-    bg: '#0f2040',
-    fg: '#97b0ff',
-    border: 'rgba(151,176,255,0.18)',
+    className: 'bg-status-shipped border-status-shipped-fg/20 text-status-shipped-fg',
+    dotClassName: 'bg-status-shipped-fg',
   },
 };
 
@@ -121,24 +109,19 @@ function OrderStatusBadge({ status, dot = false, size = 'sm', className, ...prop
         'transition-all duration-200 ease-out',
         size === 'sm' && 'px-2.5 py-0.5 text-[11px]',
         size === 'md' && 'px-3 py-1 text-xs',
+        config.className,
         className,
       )}
-      style={{
-        background: config.bg,
-        color: config.fg,
-        borderColor: config.border,
-      }}
       {...props}
     >
       {dot && (
         <span
-          className="inline-block rounded-full shrink-0"
-          style={{
-            width: size === 'sm' ? 5 : 6,
-            height: size === 'sm' ? 5 : 6,
-            background: config.fg,
-            opacity: 0.85,
-          }}
+          className={cn(
+            'inline-block rounded-full shrink-0 opacity-85',
+            size === 'sm' && 'size-1.5',
+            size === 'md' && 'size-2',
+            config.dotClassName,
+          )}
         />
       )}
       {config.label}

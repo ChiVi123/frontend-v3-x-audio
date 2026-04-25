@@ -1,9 +1,10 @@
 'use client';
 
-import * as React from 'react';
-import { Moon, Sun, Monitor } from 'lucide-react';
+import { Monitor, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import * as React from 'react';
 import { Button } from '~/components/ui/button';
+import { cn } from '~/lib/utils';
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -23,7 +24,7 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-full border border-zinc-200 dark:border-zinc-700">
+    <div className="flex items-center gap-0.5 bg-surface-container-low p-1 rounded-full border border-border">
       {[
         { name: 'light', icon: Sun },
         { name: 'dark', icon: Moon },
@@ -31,9 +32,14 @@ export function ThemeToggle() {
       ].map((t) => (
         <Button
           key={t.name}
-          variant={theme === t.name ? 'secondary' : 'ghost'}
+          variant="ghost"
           size="icon"
-          className={`w-7 h-7 rounded-full transition-all ${theme === t.name ? 'shadow-sm bg-white dark:bg-zinc-900' : 'opacity-50 hover:opacity-100'}`}
+          className={cn(
+            'w-7 h-7 rounded-full transition-all duration-300',
+            theme === t.name
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground opacity-60 hover:opacity-100',
+          )}
           onClick={() => setTheme(t.name)}
         >
           <t.icon className="w-3.5 h-3.5" />

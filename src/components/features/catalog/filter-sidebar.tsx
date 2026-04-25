@@ -76,7 +76,7 @@ function FilterSection({
 }) {
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[#99907c]">{label}</span>
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
       {children}
     </div>
   );
@@ -134,14 +134,14 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
     <aside data-slot="filter-sidebar" className={cn('flex w-full flex-col', className)}>
       {/* ── Header ── */}
       <div className="mb-5 flex items-center justify-between">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-[#e3e2e2]">Filters</span>
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground">Filters</span>
         {hasActiveFilters && (
           <button
             type="button"
             onClick={clearAll}
             className={cn(
               'font-mono text-[10px] uppercase tracking-wider',
-              'text-[#99907c] hover:text-[#f2ca50]',
+              'text-muted-foreground hover:text-primary',
               'transition-colors duration-200 ease-out',
               'underline underline-offset-2',
             )}
@@ -171,7 +171,7 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
                     htmlFor={id}
                     className={cn(
                       'cursor-pointer text-sm transition-colors duration-200',
-                      isChecked ? 'text-[#e3e2e2]' : 'text-[#d0c5af] hover:text-[#e3e2e2]',
+                      isChecked ? 'text-foreground' : 'text-on-surface-variant hover:text-foreground',
                     )}
                   >
                     {driver}
@@ -197,10 +197,10 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
                   className={cn(
                     'rounded-full border px-3 py-1 font-sans text-xs font-medium',
                     'transition-all duration-200 ease-out outline-none',
-                    'focus-visible:ring-2 focus-visible:ring-[#f2ca50]/30',
+                    'focus-visible:ring-2 focus-visible:ring-primary/30',
                     isActive
-                      ? 'border-[#f2ca50]/50 bg-[#f2ca50]/10 text-[#f2ca50]'
-                      : 'border-[#292a2a] bg-transparent text-[#99907c] hover:border-[#4d4635] hover:text-[#d0c5af]',
+                      ? 'border-primary/50 bg-primary/10 text-primary'
+                      : 'border-border bg-transparent text-muted-foreground hover:border-outline-brand hover:text-on-surface-variant',
                   )}
                 >
                   {sig}
@@ -217,8 +217,8 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
           <div className="flex flex-col gap-3">
             {/* Live range display */}
             <div className="flex justify-between">
-              <span className="font-mono text-xs text-[#d0c5af]">{state.impedanceRange[0]}Ω</span>
-              <span className="font-mono text-xs text-[#d0c5af]">{state.impedanceRange[1]}Ω</span>
+              <span className="font-mono text-xs text-on-surface-variant">{state.impedanceRange[0]}Ω</span>
+              <span className="font-mono text-xs text-on-surface-variant">{state.impedanceRange[1]}Ω</span>
             </div>
 
             <Slider
@@ -231,8 +231,8 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
 
             {/* Absolute bounds hint */}
             <div className="flex justify-between">
-              <span className="font-mono text-[9px] text-[#4d4635]">{impedanceMin}Ω</span>
-              <span className="font-mono text-[9px] text-[#4d4635]">{impedanceMax}Ω</span>
+              <span className="font-mono text-[9px] text-border">{impedanceMin}Ω</span>
+              <span className="font-mono text-[9px] text-border">{impedanceMax}Ω</span>
             </div>
           </div>
         </FilterSection>
@@ -241,7 +241,7 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
 
         {/* ── In Stock Only ── */}
         <div className="flex items-center justify-between">
-          <label htmlFor="in-stock-toggle" className="cursor-pointer text-sm text-[#d0c5af]">
+          <label htmlFor="in-stock-toggle" className="cursor-pointer text-sm text-on-surface-variant">
             In Stock Only
           </label>
           <Switch

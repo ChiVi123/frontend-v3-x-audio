@@ -82,7 +82,7 @@ function SpecChip({ label, type, size = 'sm', className, ...props }: SpecChipPro
         // Pill shape per DESIGN.md
         'inline-flex items-center gap-1.5 rounded-full border',
         // Colors: tertiary text (#bfcdff) + surface-container bg + outline-variant border
-        'border-[#4d4635] bg-[#1e2020] text-[#bfcdff]',
+        'border-border bg-card text-on-surface-variant',
         // Typography: monospace + tracked
         'font-mono font-medium leading-none whitespace-nowrap',
         // Transition
@@ -95,7 +95,7 @@ function SpecChip({ label, type, size = 'sm', className, ...props }: SpecChipPro
       {...props}
     >
       {Icon && (
-        <Icon className={cn('shrink-0 text-[#99907c]', size === 'sm' ? 'size-2.5' : 'size-3')} strokeWidth={2} />
+        <Icon className={cn('shrink-0 text-muted-foreground', size === 'sm' ? 'size-2.5' : 'size-3')} strokeWidth={2} />
       )}
       {label}
     </span>

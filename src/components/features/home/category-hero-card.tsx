@@ -27,6 +27,14 @@ export interface CategoryHeroCardProps extends React.ComponentProps<'article'> {
   aspectRatio?: '4/3' | '3/4' | '1/1' | '16/9';
 }
 
+const ASPECT_CLASSES = {
+  '4/3': 'aspect-4/3',
+  '3/4': 'aspect-3/4',
+  '1/1': 'aspect-square',
+  '16/9': 'aspect-video',
+} as const;
+
+
 function CategoryHeroCard({
   title,
   caption,
@@ -37,19 +45,18 @@ function CategoryHeroCard({
   className,
   ...props
 }: CategoryHeroCardProps) {
-  return (
-    <article
+  return (  <article
       data-slot="category-hero-card"
       className={cn(
-        'group/cat relative overflow-hidden rounded-2xl border border-[#292a2a]',
-        'transition-all duration-200 ease-out hover:border-[#4d4635]',
+        'group/cat relative overflow-hidden rounded-2xl border border-border',
+        'transition-all duration-200 ease-out hover:border-outline-brand',
         className,
       )}
       {...props}
     >
-      <Link href={href} className="block outline-none focus-visible:ring-2 focus-visible:ring-[#f2ca50]/40 rounded-2xl">
+      <Link href={href} className="block outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-2xl">
         {/* Image */}
-        <div className={cn('relative w-full overflow-hidden bg-[#1a1c1c]', `aspect-[${aspectRatio}]`)}>
+        <div className={cn('relative w-full overflow-hidden bg-surface-container-low', ASPECT_CLASSES[aspectRatio])}>
           <Image
             src={imageSrc}
             alt={imageAlt ?? title}
@@ -64,17 +71,17 @@ function CategoryHeroCard({
           />
 
           {/* Gradient overlay — bottom to mid */}
-          <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-[#0d0e0f]/90 via-[#0d0e0f]/30 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-surface-container-lowest/90 via-surface-container-lowest/30 to-transparent" />
 
           {/* Text content — pinned to bottom */}
           <div className="absolute bottom-0 left-0 right-0 p-5 flex flex-col gap-1.5">
             {/* Title */}
             <h3
               className={cn(
-                'font-heading text-xl text-[#e3e2e2] leading-snug',
+                'font-heading text-xl text-foreground leading-snug',
                 'relative inline-block w-fit',
                 // Gold underline grows on hover
-                'after:absolute after:bottom-0 after:left-0 after:h-px after:bg-[#f2ca50]',
+                'after:absolute after:bottom-0 after:left-0 after:h-px after:bg-primary',
                 'after:w-0 after:transition-all after:duration-300 after:ease-out',
                 'group-hover/cat:after:w-full',
               )}
@@ -83,13 +90,13 @@ function CategoryHeroCard({
             </h3>
 
             {/* Caption — gold uppercase tracked */}
-            <span
-              className={cn(
-                'font-mono text-[10px] font-semibold uppercase tracking-[0.18em]',
-                'text-[#f2ca50] opacity-80',
-                'transition-opacity duration-200 group-hover/cat:opacity-100',
-              )}
-            >
+              <span
+                className={cn(
+                  'font-mono text-[10px] font-semibold uppercase tracking-[0.18em]',
+                  'text-primary opacity-80',
+                  'transition-opacity duration-200 group-hover/cat:opacity-100',
+                )}
+              >
               {caption}
             </span>
           </div>
