@@ -139,6 +139,174 @@ Error responses:
 
 - Do not comment on obvious code (e.g., `// increment counter` for `count++`). Comment only the "why", not the "what".
 
+## Server-First Architecture (Next.js App Router)
+
+### Core Rule
+
+Every component starts as a Server Component. Only convert to `'use client'` when the component **directly** requires one of:
+
+- Browser APIs (`window`, `document`, `navigator`, Web Audio API, Canvas, WebGL)
+- React state (`useState`, `useReducer`)
+- React lifecycle effects (`useEffect`, `useLayoutEffect`)
+- Event handlers that depend on client state
+- Next.js client hooks (`useRouter`, `usePathname`, `useSearchParams`)
+
+If none of the above apply, the component **must** remain a Server Component.
+
+### Decision Tree
+
+```
+Does this component need browser APIs, state, or client hooks?
+├── NO  → Server Component (default)
+└── YES → Can the interactive part be extracted into a smaller child?
+          ├── YES → Keep parent as Server Component, extract a focused Client Component leaf
+          └── NO  → Client Component (document why)
+```
+
+### Client Component Patterns
+
+**❌ Wrong — entire page/section becomes a client boundary unnecessarily:**
+
+```tsx
+'use client';
+// Owns state + renders breadcrumb + info panel + price + specs
+function ProductDetailClient({ product }) {
+  const [activeTab, setActiveTab] = useState('360');
+  return (
+    <>
+      <Breadcrumb ... />        {/* pure display — doesn't need client */}
+      <ProductInfoPanel ... />  {/* pure display — doesn't need client */}
+      <Tabs value={activeTab} onChange={setActiveTab} ... />
+    </>
+  );
+}
+```
+
+**✅ Correct — extract the minimal interactive piece:**
+
+```tsx
+// product-detail-page.tsx — Server Component
+export default async function ProductDetailPage({ params }) {
+  const product = await fetchProduct(params.slug); // server data fetch
+  return (
+    <>
+      <Breadcrumb ... />          {/* Server — pure display */}
+      <ProductInfoPanel ... />    {/* Server — pure display */}
+      <ProductViewerTabs ... />   {/* Client — owns activeTab state ONLY */}
+      <AddToCartButton ... />     {/* Client — owns onClick ONLY */}
+    </>
+  );
+}
+
+// product-viewer-tabs.tsx — Client Component
+'use client';
+function ProductViewerTabs(props) {
+  const [activeTab, setActiveTab] = useState('360'); // only reason to be client
+  return <Tabs value={activeTab} onValueChange={setActiveTab} ... />;
+}
+```
+
+### URL State vs. Component State
+
+Interactive UI that **filters, sorts, or paginates data** must use URL search params — not `useState`.
+
+- URL state → shareable, bookmarkable, SEO-friendly, server-renderable
+- Component state → ephemeral, lost on refresh, forces client boundary on data
+
+**❌ Wrong — filter logic on client, component owns data state:**
+
+```tsx
+'use client';
+function CatalogClient({ allProducts }) {
+  const [sort, setSort] = useState('featured');
+  const [filters, setFilters] = useState({ ... });
+  const filtered = allProducts.filter(...).sort(...); // client-side
+  return <ProductGrid products={filtered} />;
+}
+```
+
+**✅ Correct — URL params drive server filter, thin client pushes params:**
+
+```tsx
+// catalog/page.tsx — Server Component
+export default async function CatalogPage({ searchParams }) {
+  const { sort, filters } = parseSearchParams(await searchParams);
+  const products = await fetchProducts({ sort, filters }); // server-side
+  return (
+    <>
+      <FilterSidebarControl defaultFilters={filters} />  {/* Client: pushes URL only */}
+      <CatalogSortControl defaultSort={sort} />          {/* Client: pushes URL only */}
+      <ProductGrid products={products} />                {/* Server: pure display */}
+    </>
+  );
+}
+
+// catalog-controls.tsx — Client Component
+'use client';
+function FilterSidebarControl({ defaultFilters }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  // Only responsibility: push new params to URL on filter change
+  const handleChange = (state) => {
+    const params = new URLSearchParams(searchParams.toString());
+    // ... build params ...
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+  return <FilterSidebar value={defaultFilters} onFilterChange={handleChange} />;
+}
+```
+
+### `useSearchParams()` and Suspense
+
+Any Client Component that calls `useSearchParams()` must be wrapped in `<Suspense>` at the Server Component boundary. Without it, Next.js opts the entire page into dynamic rendering.
+
+```tsx
+// ✅ Required pattern
+<Suspense fallback={<FilterSidebarSkeleton />}>
+  <FilterSidebarControl defaultFilters={filters} />
+</Suspense>
+```
+
+### Data Fetching
+
+- **Always fetch data in Server Components** (`page.tsx`, `layout.tsx`, or async Server Components).
+- **Never** fetch data inside Client Components on initial render (`useEffect(() => fetch(...))`) — this causes waterfalls and duplicates round trips.
+- Pass fetched data **down as props** to both Server and Client children.
+
+```tsx
+// ✅ Correct — fetch in Server Component, pass down
+export default async function ProductDetailPage({ params }) {
+  const product = await fetchProduct(params.slug); // one server round trip
+  return <ProductViewerTabs posterUrl={product.posterUrl} thumbnails={product.thumbnails} />;
+}
+
+// ❌ Wrong — fetch inside Client Component
+'use client';
+function ProductViewerTabs({ slug }) {
+  const [product, setProduct] = useState(null);
+  useEffect(() => { fetch(`/api/products/${slug}`).then(...); }, [slug]); // client waterfall
+}
+```
+
+### Naming Convention
+
+| Suffix / Location | Meaning |
+|---|---|
+| `page.tsx` | Always Server Component unless explicitly noted |
+| `layout.tsx` | Always Server Component unless explicitly noted |
+| `*-client.tsx` | **Avoid this pattern** — it suggests an entire section was needlessly made client-side. Prefer specific names that describe the narrow responsibility: `*-tabs.tsx`, `*-controls.tsx`, `*-button.tsx` |
+| `use client` at top | Component has a specific, documented reason to be a Client Component |
+
+### Checklist Before Adding `'use client'`
+
+Before adding `'use client'` to any component, confirm:
+
+- [ ] This component directly uses a browser API, state hook, or client hook
+- [ ] I cannot extract the interactive part into a smaller leaf component
+- [ ] If it touches URL-driven data (filters, sort, pagination) → I am using `useRouter` + `useSearchParams` to push URL params, not `useState` to hold data
+- [ ] If it uses `useSearchParams()` → a `<Suspense>` boundary wraps it in the parent Server Component
+
 ## Git
 
 - Use conventional commits: `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, `chore:`
