@@ -1,104 +1,53 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from 'radix-ui';
-import type * as React from 'react';
-
+import type { ComponentProps } from 'react';
 import { cn } from '~/lib/utils';
 
 const badgeVariants = cva(
-  // Base: pill shape per DESIGN.md — "Pill (100px): Exclusively for status badges and technical tags"
-  'group/badge inline-flex h-fit w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap border border-transparent px-2.5 py-1 text-xs font-medium transition-all duration-200 ease-out focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3!',
+  // Base — pill shape (DESIGN.md: "Pill: Exclusively for status badges and technical tags")
+  'group/badge inline-flex h-fit w-fit shrink-0 items-center gap-1 overflow-hidden whitespace-nowrap border border-transparent font-medium transition-all duration-200 ease-out focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 [&>svg]:pointer-events-none [&>svg]:size-3!',
   {
     variants: {
       variant: {
         // ── shadcn originals ──
-        default: 'rounded-full bg-primary text-primary-foreground',
-        secondary: 'rounded-full bg-secondary text-secondary-foreground',
-        destructive: 'rounded-full bg-destructive/15 text-destructive border-destructive/20',
-        outline: 'rounded-full border-border text-foreground',
-        ghost: 'rounded-full hover:bg-muted hover:text-muted-foreground',
+        default: 'rounded-full bg-primary text-primary-foreground px-2.5 py-0.5 text-xs',
+        secondary: 'rounded-full bg-secondary text-secondary-foreground px-2.5 py-0.5 text-xs',
+        destructive: 'rounded-full bg-destructive/15 text-destructive border-destructive/20 px-2.5 py-0.5 text-xs',
+        outline: 'rounded-full border-border text-foreground px-2.5 py-0.5 text-xs',
 
-        // ── V3-X Gold / brand badges ──
+        // ── V3-X: Gold signifier (NEW, LIMITED, EXCLUSIVE) ──
+        gold: 'rounded-full bg-primary/15 text-primary border border-primary/30 px-2.5 py-0.5 text-xs',
 
-        /**
-         * gold — Premium signifier (NEW, LIMITED, EXCLUSIVE)
-         * Per DESIGN.md: Gold accent used with "surgical precision"
-         */
-        gold: 'rounded-full bg-[#f2ca50]/15 text-[#f2ca50] border border-[#f2ca50]/30',
+        // ── V3-X: Filled gold (hero "In Stock" overlay) ──
+        'gold-solid': 'rounded-full bg-primary text-primary-foreground font-semibold px-2.5 py-0.5 text-xs',
 
-        /**
-         * gold-solid — Filled gold (e.g., "In Stock" on hero product cards)
-         */
-        'gold-solid': 'rounded-full bg-[#f2ca50] text-[#3c2f00] font-semibold border-transparent',
+        // ── V3-X: Technical spec chip (32Ω, Hi-Res Audio) ──
+        // DESIGN.md: "Tertiary text, subtle border, pill-shaped"
+        spec: 'rounded-full border-outline-variant bg-surface-container text-tertiary font-mono text-[0.6875rem] tracking-wide px-2.5 py-0.5',
 
-        // ── V3-X Spec chips ──
-        // DESIGN.md: "Audio Spec Chips: pill-shaped, Tertiary text, subtle border"
-        // Tertiary color from DESIGN.md: #bfcdff
-
-        /**
-         * spec — Technical data chip (32Ω, Hi-Res Audio, 4.4mm Balanced)
-         * Monospace font applied via text-spec utility on parent or override
-         */
-        spec: 'rounded-full border border-[#4d4635] bg-[#1e2020] text-[#bfcdff] font-mono text-[0.6875rem] tracking-wide px-2.5 py-0.5',
-
-        /**
-         * spec-neutral — Slightly softer for less prominent specs
-         */
         'spec-neutral':
-          'rounded-full border border-[#4d4635] bg-[#1a1c1c] text-[#d0c5af] font-mono text-[0.6875rem] tracking-wide px-2.5 py-0.5',
+          'rounded-full border-outline-variant bg-surface-container-low text-on-surface-variant font-mono text-[0.6875rem] tracking-wide px-2.5 py-0.5',
 
-        // ── V3-X Order / inventory status badges ──
-        // DESIGN.md: "Status: rendered in desaturated tones"
-        // Colors mapped from --status-* tokens
-
-        /**
-         * status-processing — Amber/gold tone
-         */
+        // ── Order status badges — use CSS variable tokens ──
         'status-processing':
-          'rounded-full bg-[var(--status-processing)] text-[var(--status-processing-fg)] border border-[var(--status-processing-fg)]/20',
-
-        /**
-         * status-shipped — Blue tone
-         */
+          'rounded-full bg-status-processing text-status-processing-fg border-status-processing-fg/20 px-2.5 py-0.5 text-[11px]',
         'status-shipped':
-          'rounded-full bg-[var(--status-shipped)] text-[var(--status-shipped-fg)] border border-[var(--status-shipped-fg)]/20',
-
-        /**
-         * status-delivered — Green tone
-         */
+          'rounded-full bg-status-shipped text-status-shipped-fg border-status-shipped-fg/20 px-2.5 py-0.5 text-[11px]',
         'status-delivered':
-          'rounded-full bg-[var(--status-delivered)] text-[var(--status-delivered-fg)] border border-[var(--status-delivered-fg)]/20',
-
-        /**
-         * status-cancelled — Red tone (desaturated)
-         */
+          'rounded-full bg-status-delivered text-status-delivered-fg border-status-delivered-fg/20 px-2.5 py-0.5 text-[11px]',
         'status-cancelled':
-          'rounded-full bg-[var(--status-cancelled)] text-[var(--status-cancelled-fg)] border border-[var(--status-cancelled-fg)]/20',
-
-        /**
-         * status-low-stock — Warning amber
-         */
+          'rounded-full bg-status-cancelled text-status-cancelled-fg border-status-cancelled-fg/20 px-2.5 py-0.5 text-[11px]',
         'status-low-stock':
-          'rounded-full bg-[var(--status-low-stock)] text-[var(--status-low-stock-fg)] border border-[var(--status-low-stock-fg)]/30',
-
-        /**
-         * status-in-stock — Delivered green reused for "In Stock"
-         */
+          'rounded-full bg-status-low-stock text-status-low-stock-fg border-status-low-stock-fg/25 px-2.5 py-0.5 text-[11px]',
         'status-in-stock':
-          'rounded-full bg-[var(--status-delivered)] text-[var(--status-delivered-fg)] border border-[var(--status-delivered-fg)]/20',
-
-        /**
-         * status-pre-order — Tertiary blue tone
-         */
+          'rounded-full bg-status-delivered text-status-delivered-fg border-status-delivered-fg/20 px-2.5 py-0.5 text-[11px]',
         'status-pre-order':
-          'rounded-full bg-[var(--status-shipped)] text-[var(--status-shipped-fg)] border border-[var(--status-shipped-fg)]/20',
+          'rounded-full bg-status-shipped text-status-shipped-fg border-status-shipped-fg/20 px-2.5 py-0.5 text-[11px]',
       },
 
-      /**
-       * dot — Prepend a colored dot indicator (like in order-history mockup)
-       * Usage: <Badge variant="status-processing" dot>Processing</Badge>
-       */
+      // Prepend a dot indicator (order-history style)
       dot: {
-        true: 'pl-2 before:mr-1.5 before:inline-block before:size-1.5 before:rounded-full before:bg-current before:opacity-80',
+        true: 'before:mr-1.5 before:inline-block before:size-1.5 before:rounded-full before:bg-current before:opacity-80',
         false: '',
       },
     },
@@ -115,7 +64,7 @@ function Badge({
   dot = false,
   asChild = false,
   ...props
-}: React.ComponentProps<'span'> &
+}: ComponentProps<'span'> &
   VariantProps<typeof badgeVariants> & {
     asChild?: boolean;
   }) {

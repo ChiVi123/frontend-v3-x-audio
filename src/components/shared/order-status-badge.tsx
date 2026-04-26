@@ -1,21 +1,12 @@
-import type * as React from 'react';
+import type { ComponentProps } from 'react';
 import { cn } from '~/lib/utils';
 
 /**
  * OrderStatusBadge
  *
- * Maps order/inventory status values to the correct visual badge.
- * Used in: Order History, Order Detail, Admin Dashboard table,
- *          Product cards (inventory status).
- *
- * Status tokens defined in globals.css:
- *   --status-processing / -fg
- *   --status-shipped / -fg
- *   --status-delivered / -fg
- *   --status-cancelled / -fg
- *   --status-low-stock / -fg
- *   --status-in-stock (reuses delivered tokens)
- *   --status-pre-order (reuses shipped tokens)
+ * Maps order/inventory status to the correct badge style using
+ * CSS variable tokens defined in globals.css.
+ * No inline styles — all colors via Tailwind token classes.
  */
 
 export type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'refunded';
@@ -24,81 +15,62 @@ export type InventoryStatus = 'in_stock' | 'out_of_stock' | 'low_stock' | 'pre_o
 
 type Status = OrderStatus | InventoryStatus;
 
-interface StatusConfig {
-  label: string;
-  className: string;
-  dotClassName: string;
-}
-
-const STATUS_MAP: Record<Status, StatusConfig> = {
-  // Order statuses
+// All class strings are static so Tailwind's JIT picks them up at build time
+const STATUS_CLASSES: Record<Status, { label: string; classes: string }> = {
   pending: {
     label: 'Pending',
-    className: 'bg-status-processing border-status-processing-fg/20 text-status-processing-fg',
-    dotClassName: 'bg-status-processing-fg',
+    classes: 'bg-status-processing text-status-processing-fg border-status-processing-fg/20',
   },
   processing: {
     label: 'Processing',
-    className: 'bg-status-processing border-status-processing-fg/20 text-status-processing-fg',
-    dotClassName: 'bg-status-processing-fg',
+    classes: 'bg-status-processing text-status-processing-fg border-status-processing-fg/20',
   },
   shipped: {
     label: 'Shipped',
-    className: 'bg-status-shipped border-status-shipped-fg/20 text-status-shipped-fg',
-    dotClassName: 'bg-status-shipped-fg',
+    classes: 'bg-status-shipped text-status-shipped-fg border-status-shipped-fg/20',
   },
   delivered: {
     label: 'Delivered',
-    className: 'bg-status-delivered border-status-delivered-fg/20 text-status-delivered-fg',
-    dotClassName: 'bg-status-delivered-fg',
+    classes: 'bg-status-delivered text-status-delivered-fg border-status-delivered-fg/20',
   },
   completed: {
     label: 'Completed',
-    className: 'bg-status-delivered border-status-delivered-fg/20 text-status-delivered-fg',
-    dotClassName: 'bg-status-delivered-fg',
+    classes: 'bg-status-delivered text-status-delivered-fg border-status-delivered-fg/20',
   },
   cancelled: {
     label: 'Cancelled',
-    className: 'bg-status-cancelled border-status-cancelled-fg/20 text-status-cancelled-fg',
-    dotClassName: 'bg-status-cancelled-fg',
+    classes: 'bg-status-cancelled text-status-cancelled-fg border-status-cancelled-fg/20',
   },
   refunded: {
     label: 'Refunded',
-    className: 'bg-status-cancelled border-status-cancelled-fg/20 text-status-cancelled-fg',
-    dotClassName: 'bg-status-cancelled-fg',
+    classes: 'bg-status-cancelled text-status-cancelled-fg border-status-cancelled-fg/20',
   },
-  // Inventory statuses
   in_stock: {
     label: 'In Stock',
-    className: 'bg-status-delivered border-status-delivered-fg/20 text-status-delivered-fg',
-    dotClassName: 'bg-status-delivered-fg',
+    classes: 'bg-status-delivered text-status-delivered-fg border-status-delivered-fg/20',
   },
   low_stock: {
     label: 'Low Stock',
-    className: 'bg-status-low-stock border-status-low-stock-fg/20 text-status-low-stock-fg',
-    dotClassName: 'bg-status-low-stock-fg',
+    classes: 'bg-status-low-stock text-status-low-stock-fg border-status-low-stock-fg/25',
   },
   out_of_stock: {
     label: 'Out of Stock',
-    className: 'bg-status-cancelled border-status-cancelled-fg/20 text-status-cancelled-fg',
-    dotClassName: 'bg-status-cancelled-fg',
+    classes: 'bg-status-cancelled text-status-cancelled-fg border-status-cancelled-fg/20',
   },
   pre_order: {
     label: 'Pre-order',
-    className: 'bg-status-shipped border-status-shipped-fg/20 text-status-shipped-fg',
-    dotClassName: 'bg-status-shipped-fg',
+    classes: 'bg-status-shipped text-status-shipped-fg border-status-shipped-fg/20',
   },
 };
 
-interface OrderStatusBadgeProps extends React.ComponentProps<'span'> {
+interface OrderStatusBadgeProps extends ComponentProps<'span'> {
   status: Status;
-  /** Show leading dot indicator */
   dot?: boolean;
   size?: 'sm' | 'md';
 }
 
 function OrderStatusBadge({ status, dot = false, size = 'sm', className, ...props }: OrderStatusBadgeProps) {
-  const config = STATUS_MAP[status] ?? STATUS_MAP.pending;
+  const config = STATUS_CLASSES[status] ?? STATUS_CLASSES.pending;
 
   return (
     <span
@@ -107,23 +79,15 @@ function OrderStatusBadge({ status, dot = false, size = 'sm', className, ...prop
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full border font-medium whitespace-nowrap',
         'transition-all duration-200 ease-out',
+        config.classes,
         size === 'sm' && 'px-2.5 py-0.5 text-[11px]',
         size === 'md' && 'px-3 py-1 text-xs',
-        config.className,
         className,
       )}
       {...props}
     >
-      {dot && (
-        <span
-          className={cn(
-            'inline-block rounded-full shrink-0 opacity-85',
-            size === 'sm' && 'size-1.5',
-            size === 'md' && 'size-2',
-            config.dotClassName,
-          )}
-        />
-      )}
+      {/* Dot uses bg-current — inherits text color, no inline style needed */}
+      {dot && <span className="inline-block size-1.5 rounded-full bg-current opacity-85 shrink-0" />}
       {config.label}
     </span>
   );

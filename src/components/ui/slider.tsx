@@ -1,25 +1,17 @@
 'use client';
 
-import * as SliderPrimitive from '@radix-ui/react-slider';
-import * as React from 'react';
-
+import { Slider as SliderPrimitive } from 'radix-ui';
+import type { ComponentProps } from 'react';
 import { cn } from '~/lib/utils';
 
 /**
  * V3-X Audio Slider
  *
- * Used in:
- * 1. Catalog filter — Impedance range (16Ω - 300Ω)
- * 2. VirtualSandbox — LOW / MID / HIGH EQ sliders
+ * Used in: catalog Impedance filter (range / two thumbs),
+ *          VirtualSandbox EQ (single value per band).
  *
- * Per DESIGN.md: "Gold accent for interactive states"
- * Per design mockup: gold thumb, gold filled track
- *
- * - Track: dark surface (#1a1c1c), gold filled range
- * - Thumb: gold (#f2ca50) circle, dark border, subtle shadow
- * - Focus: gold ring
- *
- * Supports both single value and range (two thumbs).
+ * DESIGN.md: Gold thumb + gold filled range track.
+ * Uses primary token so it adapts to light/dark automatically.
  */
 function Slider({
   className,
@@ -28,12 +20,12 @@ function Slider({
   min = 0,
   max = 100,
   ...props
-}: React.ComponentProps<typeof SliderPrimitive.Root>) {
-  // Support both controlled and uncontrolled
-  const _values = React.useMemo(
-    () => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]),
-    [value, defaultValue, min, max],
-  );
+}: ComponentProps<typeof SliderPrimitive.Root>) {
+  // Determine number of thumbs from value/defaultValue for key generation
+  const thumbCount = Array.isArray(value) ? value.length : Array.isArray(defaultValue) ? defaultValue.length : 1;
+
+  // Stable keys for min/max thumbs — never use index
+  const thumbKeys = thumbCount === 2 ? ['thumb-min', 'thumb-max'] : ['thumb-single'];
 
   return (
     <SliderPrimitive.Root
@@ -44,53 +36,48 @@ function Slider({
       max={max}
       className={cn(
         'relative flex w-full touch-none items-center select-none',
-        // Vertical support
         'data-[orientation=vertical]:h-full data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col',
         'disabled:opacity-40',
         className,
       )}
       {...props}
     >
-      {/* Track */}
       <SliderPrimitive.Track
         data-slot="slider-track"
         className={cn(
-          'relative grow overflow-hidden rounded-full',
-          // Horizontal
-          'h-1 w-full bg-[#292a2a]',
-          // Vertical
+          'relative grow overflow-hidden rounded-full bg-surface-container-high',
+          'h-1 w-full',
           'data-[orientation=vertical]:h-full data-[orientation=vertical]:w-1',
         )}
       >
-        {/* Filled range — gold */}
+        {/* Filled range — gold (primary) */}
         <SliderPrimitive.Range
           data-slot="slider-range"
           className={cn(
-            'absolute rounded-full bg-[#f2ca50]',
+            'absolute rounded-full bg-primary',
             'data-[orientation=horizontal]:h-full',
             'data-[orientation=vertical]:w-full',
           )}
         />
       </SliderPrimitive.Track>
 
-      {/* Render a thumb for each value */}
-      {_values.map((_, i) => (
+      {/* Named thumb keys — no index used */}
+      {thumbKeys.map((key) => (
         <SliderPrimitive.Thumb
-          key={`slider-thumb-${i.toString()}`}
+          key={key}
           data-slot="slider-thumb"
           className={cn(
-            // Shape
             'block size-4 rounded-full',
-            // Gold thumb
-            'bg-[#f2ca50] border-2 border-[#3c2f00]/30',
-            // Shadow for depth on dark bg
-            'shadow-[0_0_0_3px_#f2ca50/15]',
+            // Gold thumb with dark border for contrast
+            'bg-primary border-2 border-primary-foreground/30',
+            // Subtle glow
+            'shadow-[0_0_0_3px_color-mix(in_oklab,var(--color-primary)_15%,transparent)]',
+            // Hover: brighter + larger glow
+            'hover:shadow-[0_0_0_5px_color-mix(in_oklab,var(--color-primary)_22%,transparent)]',
             // Transition
             'transition-all duration-200 ease-out',
-            // Hover: slightly larger / brighter
-            'hover:bg-[#ffe088] hover:shadow-[0_0_0_4px_#f2ca50/25]',
             // Focus
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f2ca50]/40 focus-visible:ring-offset-0',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
             // Disabled
             'disabled:pointer-events-none',
           )}

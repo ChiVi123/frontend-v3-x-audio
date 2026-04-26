@@ -1,6 +1,6 @@
 'use client';
 
-import * as React from 'react';
+import { useCallback, useState } from 'react';
 import { Checkbox } from '~/components/ui/checkbox';
 import { Slider } from '~/components/ui/slider';
 import { Switch } from '~/components/ui/switch';
@@ -9,20 +9,17 @@ import { cn } from '~/lib/utils';
 /**
  * FilterSidebar — Catalog smart filter panel
  *
- * Matches catalog.png left panel:
- * - Driver Type (checkboxes)
- * - Sound Signature (pill toggle buttons)
- * - Impedance range (dual-thumb slider)
- * - In Stock Only (switch)
- * - Clear All
+ * Matches catalog.png: Driver Type checkboxes, Sound Signature pills,
+ * Impedance range slider, In Stock Only switch.
  *
- * State is managed locally and exposed via onFilterChange callback.
- * In production: sync to URL search params with nuqs or useSearchParams.
+ * onChange renamed to onFilterChange to avoid conflict with
+ * HTMLAttributes<HTMLElement>.onChange (ChangeEventHandler).
  */
 
-// ── Types ──────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────
 
 export type DriverType = 'Dynamic (DD)' | 'Balanced Armature (BA)' | 'Planar Magnetic' | 'Tribrid' | 'Electrostatic';
+
 export type SoundSig = 'Reference' | 'Warm & Smooth' | 'V-Shaped' | 'Mid-Forward' | 'Bright' | 'Bass Heavy';
 
 export interface FilterState {
@@ -35,23 +32,12 @@ export interface FilterState {
 interface FilterSidebarProps {
   className?: string;
   value?: FilterState;
-  /**
-   * Renamed from `onChange` to avoid conflict with
-   * HTMLAttributes<HTMLElement>.onChange (ChangeEventHandler).
-   */
   onFilterChange?: (state: FilterState) => void;
-  /** Lower bound for impedance slider. Default: 8 */
   impedanceMin?: number;
-  /** Upper bound for impedance slider. Default: 600 */
   impedanceMax?: number;
 }
 
-const DEFAULT_FILTER: FilterState = {
-  driverTypes: [],
-  soundSigs: [],
-  impedanceRange: [16, 300],
-  inStockOnly: false,
-};
+// ── Constants ──────────────────────────────────────────────────────────────
 
 const DRIVER_OPTIONS: DriverType[] = [
   'Dynamic (DD)',
@@ -63,7 +49,12 @@ const DRIVER_OPTIONS: DriverType[] = [
 
 const SOUND_SIG_OPTIONS: SoundSig[] = ['Reference', 'Warm & Smooth', 'V-Shaped', 'Mid-Forward', 'Bright', 'Bass Heavy'];
 
-// ── Sub-components ─────────────────────────────────────────────────────────
+// Stable ID from driver name — avoids index as key
+function toCheckboxId(driver: DriverType): string {
+  return `driver-${driver.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
+}
+
+// ── Sub-component ──────────────────────────────────────────────────────────
 
 function FilterSection({
   label,
@@ -76,7 +67,9 @@ function FilterSection({
 }) {
   return (
     <div className={cn('flex flex-col gap-3', className)}>
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</span>
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-on-surface-variant">
+        {label}
+      </span>
       {children}
     </div>
   );
@@ -85,15 +78,16 @@ function FilterSection({
 // ── Main component ─────────────────────────────────────────────────────────
 
 function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax = 600, className }: FilterSidebarProps) {
-  const [internal, setInternal] = React.useState<FilterState>(() => ({
-    ...DEFAULT_FILTER,
+  const [internal, setInternal] = useState<FilterState>(() => ({
+    driverTypes: [],
+    soundSigs: [],
     impedanceRange: [impedanceMin, impedanceMax],
+    inStockOnly: false,
   }));
 
-  // Controlled: use value prop; Uncontrolled: use internal state
   const state = value ?? internal;
 
-  const update = React.useCallback(
+  const update = useCallback(
     (patch: Partial<FilterState>) => {
       const next = { ...state, ...patch };
       setInternal(next);
@@ -116,8 +110,10 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
 
   const clearAll = () => {
     const reset: FilterState = {
-      ...DEFAULT_FILTER,
+      driverTypes: [],
+      soundSigs: [],
       impedanceRange: [impedanceMin, impedanceMax],
+      inStockOnly: false,
     };
     setInternal(reset);
     onFilterChange?.(reset);
@@ -134,14 +130,14 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
     <aside data-slot="filter-sidebar" className={cn('flex w-full flex-col', className)}>
       {/* ── Header ── */}
       <div className="mb-5 flex items-center justify-between">
-        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground">Filters</span>
+        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-on-surface">Filters</span>
         {hasActiveFilters && (
           <button
             type="button"
             onClick={clearAll}
             className={cn(
               'font-mono text-[10px] uppercase tracking-wider',
-              'text-muted-foreground hover:text-primary',
+              'text-outline-brand hover:text-primary',
               'transition-colors duration-200 ease-out',
               'underline underline-offset-2',
             )}
@@ -156,22 +152,18 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
         <FilterSection label="Driver Type">
           <div className="flex flex-col gap-2.5">
             {DRIVER_OPTIONS.map((driver) => {
-              const id = `driver-${driver.replace(/[^a-z0-9]/gi, '-').toLowerCase()}`;
+              const id = toCheckboxId(driver);
               const isChecked = state.driverTypes.includes(driver);
               return (
-                /*
-                 * Fix 1: key on the wrapper <div>, not on <label>.
-                 * Fix 2: <label> associated to <Checkbox> via matching htmlFor / id.
-                 *         This satisfies the "form label must be associated with an input" rule
-                 *         because Radix Checkbox renders a <button role="checkbox"> with that id.
-                 */
+                // key on wrapper div, not on label
                 <div key={driver} className="flex items-center gap-2.5">
                   <Checkbox id={id} checked={isChecked} onCheckedChange={() => toggleDriver(driver)} />
+                  {/* htmlFor matches Checkbox id — satisfies a11y label rule */}
                   <label
                     htmlFor={id}
                     className={cn(
                       'cursor-pointer text-sm transition-colors duration-200',
-                      isChecked ? 'text-foreground' : 'text-on-surface-variant hover:text-foreground',
+                      isChecked ? 'text-on-surface' : 'text-on-surface-variant hover:text-on-surface',
                     )}
                   >
                     {driver}
@@ -182,7 +174,7 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
           </div>
         </FilterSection>
 
-        <div className="h-px bg-[#292a2a]" />
+        <hr className="border-surface-container-high" />
 
         {/* ── Sound Signature ── */}
         <FilterSection label="Sound Signature">
@@ -200,7 +192,7 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
                     'focus-visible:ring-2 focus-visible:ring-primary/30',
                     isActive
                       ? 'border-primary/50 bg-primary/10 text-primary'
-                      : 'border-border bg-transparent text-muted-foreground hover:border-outline-brand hover:text-on-surface-variant',
+                      : 'border-surface-container-high bg-transparent text-outline-brand hover:border-outline-variant hover:text-on-surface-variant',
                   )}
                 >
                   {sig}
@@ -210,7 +202,7 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
           </div>
         </FilterSection>
 
-        <div className="h-px bg-[#292a2a]" />
+        <hr className="border-surface-container-high" />
 
         {/* ── Impedance Range ── */}
         <FilterSection label="Impedance">
@@ -231,13 +223,13 @@ function FilterSidebar({ value, onFilterChange, impedanceMin = 8, impedanceMax =
 
             {/* Absolute bounds hint */}
             <div className="flex justify-between">
-              <span className="font-mono text-[9px] text-border">{impedanceMin}Ω</span>
-              <span className="font-mono text-[9px] text-border">{impedanceMax}Ω</span>
+              <span className="font-mono text-[9px] text-outline-variant">{impedanceMin}Ω</span>
+              <span className="font-mono text-[9px] text-outline-variant">{impedanceMax}Ω</span>
             </div>
           </div>
         </FilterSection>
 
-        <div className="h-px bg-[#292a2a]" />
+        <hr className="border-surface-container-high" />
 
         {/* ── In Stock Only ── */}
         <div className="flex items-center justify-between">

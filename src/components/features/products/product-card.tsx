@@ -1,7 +1,7 @@
-import { Heart } from 'lucide-react';
+import { HeartIcon as WishlistIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type * as React from 'react';
+import type { ComponentProps } from 'react';
 import { type InventoryStatus, OrderStatusBadge } from '~/components/shared/order-status-badge';
 import { SpecChip } from '~/components/shared/spec-chip';
 import { Button } from '~/components/ui/button';
@@ -10,22 +10,16 @@ import { cn } from '~/lib/utils';
 /**
  * ProductCard — Core customer-facing product display
  *
- * Matches the catalog.png and home.png (Masterworks section) mockups.
- *
- * Design spec (DESIGN.md):
- * - Card surface: one step lighter than page bg → surface-container (#1e2020)
- * - Photography: high-contrast, pops against dark UI
- * - Spec chips: pill-shaped, tertiary color, subtle border
- * - Gold price text with dark foreground for premium feel
- * - Hover: subtle scale on image (200ms ease-out per spec)
- *
  * Variants:
- * - default: vertical card (catalog grid, 3-col)
- * - compact: horizontal card (smaller grids / related products)
- * - featured: wider aspect ratio for hero product lists
+ * - default  : vertical card (catalog grid, 3-col)
+ * - compact  : horizontal thumbnail card
+ * - featured : wide aspect ratio (homepage Masterworks)
+ *
+ * DESIGN.md: "Card surface one step lighter than page background."
+ * → bg-surface-container (adapts to light/dark via CSS var)
  */
 
-export interface ProductCardProps extends React.ComponentProps<'article'> {
+export interface ProductCardProps extends ComponentProps<'article'> {
   id: string;
   name: string;
   tagline?: string;
@@ -78,12 +72,8 @@ function ProductCard({
       data-slot="product-card"
       data-variant={variant}
       className={cn(
-        // Base card surface — surface-container (#1e2020), one step above page bg
-        'group/card relative flex rounded-2xl border border-border bg-card',
-        'transition-all duration-200 ease-out',
-        // Hover: very subtle border luminosity shift
-        'hover:border-outline-brand',
-        // Layout by variant
+        'group/card relative flex rounded-2xl border border-surface-container-high bg-surface-container',
+        'transition-all duration-200 ease-out hover:border-outline-variant',
         variant === 'default' && 'flex-col overflow-hidden',
         variant === 'compact' && 'flex-row items-center gap-4 p-3',
         variant === 'featured' && 'flex-col overflow-hidden',
@@ -91,8 +81,20 @@ function ProductCard({
       )}
       {...props}
     >
-      {/* ── Image container ── */}
-      {!isCompact ? (
+      {/* ── Image area ── */}
+      {isCompact ? (
+        <Link href={href} className="relative shrink-0 overflow-hidden rounded-xl" tabIndex={-1} aria-hidden>
+          <div className="relative size-20 bg-surface-container-low">
+            <Image
+              src={imageSrc}
+              alt={imageAlt ?? name}
+              fill
+              sizes="80px"
+              className="object-cover transition-transform duration-300 ease-out group-hover/card:scale-105"
+            />
+          </div>
+        </Link>
+      ) : (
         <Link href={href} className="relative block overflow-hidden" tabIndex={-1} aria-hidden>
           <div
             className={cn(
@@ -106,53 +108,33 @@ function ProductCard({
               alt={imageAlt ?? name}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className={cn(
-                'object-cover',
-                // Smooth scale on card hover — 200ms ease-out per DESIGN.md
-                'transition-transform duration-500 ease-out',
-                'group-hover/card:scale-[1.03]',
-              )}
+              className="object-cover transition-transform duration-500 ease-out group-hover/card:scale-[1.03]"
             />
-
-            {/* Gradient overlay for text legibility if needed */}
-            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-card/40 via-transparent to-transparent" />
+            {/* Subtle gradient for text legibility on image */}
+            <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-surface-container/40 via-transparent to-transparent" />
           </div>
 
-          {/* ── Badges overlaid on image ── */}
-          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-            {badge && (
-              <span className="inline-flex items-center rounded-full border border-outline-variant-brand bg-background/80 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-primary backdrop-blur-sm">
+          {/* Badge overlaid on image */}
+          {badge && (
+            <div className="absolute top-3 left-3">
+              <span className="inline-flex items-center rounded-full border border-outline-variant bg-background/80 px-2.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-primary backdrop-blur-sm">
                 {badge}
               </span>
-            )}
-          </div>
+            </div>
+          )}
 
-          {/* Inventory status — only show if not in stock */}
-          {inventoryStatus !== 'in_stock' && (
-            <div className="absolute top-3 right-3">
+          {/* Inventory status — top right */}
+          <div className="absolute top-3 right-3">
+            {inventoryStatus === 'in_stock' ? (
+              <div className="flex items-center gap-1.5 rounded-full border border-status-delivered-fg/20 bg-status-delivered/80 px-2 py-0.5 backdrop-blur-sm">
+                <span className="inline-block size-1.5 rounded-full bg-status-delivered-fg" />
+                <span className="font-mono text-[9px] font-medium uppercase tracking-wider text-status-delivered-fg">
+                  In Stock
+                </span>
+              </div>
+            ) : (
               <OrderStatusBadge status={inventoryStatus} size="sm" dot />
-            </div>
-          )}
-
-          {/* In-stock dot — subtle, per home.png mockup */}
-          {inventoryStatus === 'in_stock' && (
-            <div className="absolute top-3 right-3 flex items-center gap-1.5 rounded-full border border-status-delivered-fg/20 bg-status-delivered/80 px-2 py-0.5 backdrop-blur-sm">
-              <span className="inline-block size-1.5 rounded-full bg-status-delivered-fg" />
-              <span className="font-mono text-[9px] font-medium uppercase tracking-wider text-status-delivered-fg">In Stock</span>
-            </div>
-          )}
-        </Link>
-      ) : (
-        /* Compact: square thumbnail */
-        <Link href={href} className="relative shrink-0 overflow-hidden rounded-xl" tabIndex={-1} aria-hidden>
-          <div className="relative size-20 bg-surface-container-low">
-            <Image
-              src={imageSrc}
-              alt={imageAlt ?? name}
-              fill
-              sizes="80px"
-              className="object-cover transition-transform duration-300 ease-out group-hover/card:scale-105"
-            />
+            )}
           </div>
         </Link>
       )}
@@ -165,9 +147,8 @@ function ProductCard({
             <Link href={href} className="group/link block outline-none focus-visible:text-primary">
               <h3
                 className={cn(
-                  'font-heading text-foreground leading-snug',
-                  'transition-colors duration-200 ease-out',
-                  'group-hover/link:text-primary',
+                  'font-heading text-on-surface leading-snug',
+                  'transition-colors duration-200 ease-out group-hover/link:text-primary',
                   !isCompact && 'text-xl',
                   isCompact && 'text-base truncate',
                 )}
@@ -176,31 +157,30 @@ function ProductCard({
               </h3>
             </Link>
             {tagline && !isCompact && (
-              <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed line-clamp-2">{tagline}</p>
+              <p className="mt-0.5 text-xs text-outline-brand leading-relaxed line-clamp-2">{tagline}</p>
             )}
           </div>
 
-          {/* Wishlist button */}
           {onWishlistToggle && (
             <Button
               variant="ghost"
               size="icon-sm"
-              className="shrink-0 rounded-full text-[#4d4635] hover:text-[#f2ca50] hover:bg-[#f2ca50]/10"
+              className="shrink-0 rounded-full text-outline-variant hover:text-primary hover:bg-primary/10"
               aria-label={isWishlisted ? `Remove ${name} from wishlist` : `Add ${name} to wishlist`}
               onClick={() => onWishlistToggle(id)}
             >
-              <Heart
+              <WishlistIcon
                 className={cn('size-4 transition-all duration-200', isWishlisted && 'fill-primary text-primary')}
               />
             </Button>
           )}
         </div>
 
-        {/* Spec chips */}
+        {/* Spec chips — use spec string as key (unique per product) */}
         {specs.length > 0 && (
           <div className={cn('flex flex-wrap gap-1.5', !isCompact ? 'mt-3' : 'mt-1.5')}>
-            {specs.slice(0, isCompact ? 2 : 4).map((s) => (
-              <SpecChip key={s} label={s} size="sm" />
+            {specs.slice(0, isCompact ? 2 : 4).map((spec) => (
+              <SpecChip key={spec} label={spec} size="sm" />
             ))}
           </div>
         )}
@@ -209,15 +189,15 @@ function ProductCard({
         <div
           className={cn(
             'flex items-center',
-            !isCompact && 'mt-4 border-t border-border pt-3 justify-between',
+            !isCompact && 'mt-4 border-t border-surface-container-high pt-3 justify-between',
             isCompact && 'mt-2 justify-between',
           )}
         >
           <span
             className={cn(
-              'font-mono font-bold tracking-tight',
-              !isCompact && 'text-xl text-primary',
-              isCompact && 'text-base text-primary',
+              'font-mono font-bold tracking-tight text-primary',
+              !isCompact && 'text-xl',
+              isCompact && 'text-base',
             )}
           >
             {formatPrice(price, currency)}
