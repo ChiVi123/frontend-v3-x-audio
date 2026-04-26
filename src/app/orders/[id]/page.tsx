@@ -5,9 +5,8 @@ import { MainFooter } from '~/components/layouts/main-footer';
 import { MainHeader } from '~/components/layouts/main-header';
 import { Button } from '~/components/ui/button';
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
-  // Use id from params or a default for mock
-  const orderId = params.id === 'default' ? 'VX-88921' : params.id;
+export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id: orderId = 'VX-88921' } = await params;
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground font-sans">
@@ -80,7 +79,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
 
             {/* Shipping & Payment Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="rounded-2xl border border-[#292a2a] bg-[#1a1c1c] p-6">
+              <div className="rounded-2xl bg-background border border-border p-6">
                 <div className="mb-4 flex items-center gap-2 text-primary">
                   <MapPin className="size-4" />
                   <span className="font-mono text-[10px] font-semibold uppercase tracking-widest">
@@ -95,7 +94,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-[#292a2a] bg-[#1a1c1c] p-6">
+              <div className="rounded-2xl bg-background border border-border p-6">
                 <div className="mb-4 flex items-center gap-2 text-primary">
                   <CreditCard className="size-4" />
                   <span className="font-mono text-[10px] font-semibold uppercase tracking-widest">Payment Method</span>
