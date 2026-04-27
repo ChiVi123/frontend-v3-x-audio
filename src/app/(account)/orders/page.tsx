@@ -170,7 +170,7 @@ function OrderCard({ order }: { order: OrderSummary }) {
             {order.totalNote && <span className="font-mono text-[10px] text-outline-brand">{order.totalNote}</span>}
           </div>
         </div>
-        <Link href={`/account/orders/${order.id}`}>
+        <Link href={`/orders/${order.id}`}>
           <Button variant={action.variant} size="sm" className="font-mono text-[11px] uppercase tracking-widest">
             {action.label}
           </Button>
@@ -218,7 +218,7 @@ export default async function OrderHistoryPage({ searchParams }: { searchParams:
           return (
             <Link
               key={tab.value}
-              href={`/account/orders?status=${tab.value}`}
+              href={`/orders?status=${tab.value}`}
               className={cn(
                 'relative pb-3 pt-1 px-3',
                 'font-mono text-[11px] font-semibold uppercase tracking-widest',

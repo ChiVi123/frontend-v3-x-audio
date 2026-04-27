@@ -132,7 +132,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
       {/* ── Page header ── */}
       <div className="mb-8">
         <Link
-          href="/account/orders"
+          href="/orders"
           className="mb-4 inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-widest text-outline-brand transition-colors hover:text-primary"
         >
           ← Order History

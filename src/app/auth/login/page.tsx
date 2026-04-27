@@ -33,7 +33,7 @@ export default function LoginPage() {
     // TODO: replace with real API call via src/services/auth.ts
     // const result = await signIn('credentials', { email, password, redirect: false });
     // if (result?.error) setError('Invalid email or password.');
-    // else router.push('/account');
+    // else router.push('/');
 
     // Simulate async for demo
     await new Promise((r) => setTimeout(r, 800));

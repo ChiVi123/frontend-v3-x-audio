@@ -30,10 +30,10 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/account', label: 'Dashboard', Icon: DashboardIcon },
-  { href: '/account/orders', label: 'Orders', Icon: OrdersIcon },
-  { href: '/account/wishlist', label: 'Wishlist', Icon: WishlistIcon },
-  { href: '/account/profile', label: 'Profile', Icon: ProfileIcon },
+  { href: '/account-dashboard', label: 'Dashboard', Icon: DashboardIcon },
+  { href: '/orders', label: 'Orders', Icon: OrdersIcon },
+  { href: '/wishlist', label: 'Wishlist', Icon: WishlistIcon },
+  { href: '/profile', label: 'Profile', Icon: ProfileIcon },
 ];
 
 // Mock user — replace with session data from next-auth once integrated
@@ -46,7 +46,7 @@ const MOCK_USER = {
 export default function AccountLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
 
-  const isActive = (href: string) => (href === '/account' ? pathname === href : pathname.startsWith(href));
+  const isActive = (href: string) => pathname.startsWith(href);
 
   return (
     <div className="flex min-h-[calc(100vh-3.5rem)]">
