@@ -106,7 +106,7 @@ function DesktopFilterTabs({ active }: { active: FilterTab }) {
         return (
           <Link
             key={tab.key}
-            href={`/orders?filter=${tab.key}`}
+            href={`/account/orders?filter=${tab.key}`}
             className={cn(
               'relative px-4 pb-3 font-sans text-sm font-medium transition-colors duration-200',
               isActive ? 'text-on-surface' : 'text-on-surface-variant hover:text-on-surface',
@@ -142,7 +142,7 @@ function MobileFilterPills({ active }: { active: FilterTab }) {
         return (
           <Link
             key={tab.key}
-            href={`/orders?filter=${tab.key}`}
+            href={`/account/orders?filter=${tab.key}`}
             className={cn(
               'shrink-0 rounded-full border px-4 py-1.5 font-sans text-sm font-medium transition-all duration-200',
               isActive
@@ -197,7 +197,7 @@ function DesktopOrderCard({ order }: { order: Order }) {
       </div>
 
       {/* CTA */}
-      <Link href={`/orders/${order.id}`} className="shrink-0">
+      <Link href={`/account/orders/${order.id}`} className="shrink-0">
         <Button variant={ctaVariant} size="sm" className="font-mono text-[11px] uppercase tracking-widest">
           {ctaLabel}
         </Button>
@@ -244,12 +244,12 @@ function MobileOrderCard({ order }: { order: Order }) {
 
       {/* Row 3: 2 action buttons */}
       <div className="grid grid-cols-2 gap-2">
-        <Link href={`/orders/${order.id}`}>
+        <Link href={`/account/orders/${order.id}`}>
           <Button variant="gold" size="sm" className="w-full font-mono text-[10px] uppercase tracking-widest">
             {ctaLabel}
           </Button>
         </Link>
-        <Link href={`/orders/${order.id}`}>
+        <Link href={`/account/orders/${order.id}`}>
           <Button variant="ghost-neutral" size="sm" className="w-full font-mono text-[10px] uppercase tracking-widest">
             Details
           </Button>
