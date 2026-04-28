@@ -1,106 +1,85 @@
-import { DownloadIcon } from 'lucide-react';
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { type OrderStatus, OrderStatusBadge } from '~/components/shared/order-status-badge';
+import { OrderStatusBadge } from '~/components/shared/order-status-badge';
 import { Button } from '~/components/ui/button';
 import { cn } from '~/lib/utils';
 
-/**
- * OrderHistoryPage — Server Component matching order_history.png.
- *
- * Layout: management console header with status filter tabs.
- * Order cards in a responsive 2-col grid.
- * Each card: order ID (strikethrough if cancelled), date, status badge,
- *   product image + name + specs + price, total amount, action CTA.
- *
- * Status filter tabs driven by searchParams (URL param) — Server-rendered,
- * no client state needed.
- *
- * TODO: Replace mock data with real API:
- *   const orders = await fetch(`${NEXT_PUBLIC_API_URL}/orders?status=${status}`).then(r => r.json());
- */
-
 // ── Types ─────────────────────────────────────────────────────────────────
 
-type FilterStatus = 'all' | 'pending' | 'processing' | 'completed';
+type FilterTab = 'all' | 'processing' | 'shipped' | 'cancelled';
 
-interface OrderSummaryItem {
-  id: string;
+interface OrderItem {
   name: string;
-  imageSrc: string;
   qty: number;
-  specs: string; // pre-formatted: "Qty: 1 • Carbon Black • 32Ω"
-  price: number;
+  imageSrc: string;
 }
 
-interface OrderSummary {
+interface Order {
   id: string;
-  displayId: string; // "#VX-8892"
-  date: string;
-  status: OrderStatus;
-  item: OrderSummaryItem; // design shows 1 primary item per card
+  placedAt: string;
+  status: 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  items: OrderItem[];
   totalAmount: number;
-  totalNote?: string; // "incl. tax & shipping" or "Refunded"
 }
 
-// ── Mock data ─────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────
 
-const MOCK_ORDERS: OrderSummary[] = [
+const FILTER_TABS: { key: FilterTab; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'processing', label: 'Processing' },
+  { key: 'shipped', label: 'Shipped' },
+  { key: 'cancelled', label: 'Cancelled' },
+];
+
+// CTA label per status — matches mockup exactly
+const STATUS_CTA: Record<Order['status'], string> = {
+  delivered: 'View Details',
+  processing: 'Track Order',
+  shipped: 'Buy Again',
+  cancelled: 'View Details',
+};
+
+const MOCK_ORDERS: Order[] = [
   {
     id: 'VX-8892',
-    displayId: '#VX-8892',
-    date: 'Oct 24, 2023',
-    status: 'completed',
-    item: {
-      id: 'item-1',
-      name: 'Aether Over-Ear Monitors',
-      imageSrc: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&q=75',
-      qty: 1,
-      specs: 'Qty: 1 • Carbon Black • 32Ω',
-      price: 899,
-    },
-    totalAmount: 924.5,
-    totalNote: 'incl. tax & shipping',
+    placedAt: 'Oct 24, 2024',
+    status: 'delivered',
+    items: [
+      {
+        name: 'X-Series Studio Reference',
+        qty: 1,
+        imageSrc: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=120&h=120&fit=crop',
+      },
+    ],
+    totalAmount: 1299,
   },
   {
-    id: 'VX-8910',
-    displayId: '#VX-8910',
-    date: 'Nov 02, 2023',
+    id: 'VX-9021',
+    placedAt: 'Nov 02, 2024',
     status: 'processing',
-    item: {
-      id: 'item-2',
-      name: 'Nova Tube Amplifier',
-      imageSrc: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=200&q=75',
-      qty: 1,
-      specs: 'Qty: 1 • Brushed Aluminum',
-      price: 1450,
-    },
-    totalAmount: 1485,
-    totalNote: 'incl. tax & shipping',
+    items: [
+      {
+        name: 'V-3 Master Audio Cable',
+        qty: 2,
+        imageSrc: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=120&h=120&fit=crop',
+      },
+    ],
+    totalAmount: 450,
   },
   {
     id: 'VX-8755',
-    displayId: '#VX-8755',
-    date: 'Sep 15, 2023',
-    status: 'cancelled',
-    item: {
-      id: 'item-3',
-      name: 'OFC Silver Audio Cables',
-      imageSrc: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=200&q=75',
-      qty: 2,
-      specs: 'Qty: 2 • 2.5m Pair',
-      price: 120,
-    },
-    totalAmount: 255,
-    totalNote: 'Refunded',
+    placedAt: 'Oct 15, 2024',
+    status: 'shipped',
+    items: [
+      {
+        name: 'T-Series Tube Amp Mk II',
+        qty: 1,
+        imageSrc: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=120&h=120&fit=crop',
+      },
+    ],
+    totalAmount: 2499,
   },
-];
-
-const FILTER_TABS: { value: FilterStatus; label: string }[] = [
-  { value: 'all', label: 'All Status' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'processing', label: 'Processing' },
-  { value: 'completed', label: 'Completed' },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────
@@ -113,66 +92,166 @@ function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
-function getActionForStatus(order: OrderSummary): { label: string; variant: 'gold' | 'ghost-neutral' } {
-  if (order.status === 'cancelled' || order.status === 'refunded')
-    return { label: 'Reorder', variant: 'ghost-neutral' };
-  if (order.status === 'processing') return { label: 'Track Order', variant: 'gold' };
-  return { label: 'View Details', variant: 'ghost-neutral' };
-}
-
 // ── Sub-components ────────────────────────────────────────────────────────
 
-function OrderCard({ order }: { order: OrderSummary }) {
-  const isCancelled = order.status === 'cancelled';
-  const action = getActionForStatus(order);
-
+/**
+ * Desktop filter: line-style tabs with gold underline on active
+ * Matches order_history_dark_mode_desktop mockup exactly
+ */
+function DesktopFilterTabs({ active }: { active: FilterTab }) {
   return (
-    <article
-      data-slot="order-card"
-      className="flex flex-col overflow-hidden rounded-xl border border-surface-container-high bg-surface-container"
-    >
-      {/* Card header */}
-      <div className="flex items-center justify-between border-b border-surface-container-high px-5 py-3.5">
-        <div className="flex items-center gap-3">
-          <span
+    <div className="hidden border-b border-surface-container-high md:flex">
+      {FILTER_TABS.map((tab) => {
+        const isActive = tab.key === active;
+        return (
+          <Link
+            key={tab.key}
+            href={`/orders?filter=${tab.key}`}
             className={cn(
-              'font-mono text-sm font-semibold text-on-surface',
-              isCancelled && 'text-outline-variant line-through',
+              'relative px-4 pb-3 font-sans text-sm font-medium transition-colors duration-200',
+              isActive ? 'text-on-surface' : 'text-on-surface-variant hover:text-on-surface',
             )}
           >
-            {order.displayId}
-          </span>
-          <span className="font-mono text-xs text-on-surface-variant">{order.date}</span>
+            {tab.label}
+            {/* Gold underline for active tab */}
+            {isActive && <span className="absolute bottom-0 left-0 right-0 h-0.5 rounded-full bg-primary" />}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Mobile filter: pill-style horizontal scroll, active = gold filled
+ * Matches order_history_dark_mode_mobile mockup exactly
+ */
+function MobileFilterPills({ active }: { active: FilterTab }) {
+  // Mobile labels differ slightly from desktop
+  const mobileTabs = [
+    { key: 'all' as FilterTab, label: 'All Orders' },
+    { key: 'processing' as FilterTab, label: 'In Progress' },
+    { key: 'shipped' as FilterTab, label: 'Completed' },
+    { key: 'cancelled' as FilterTab, label: 'Cancelled' },
+  ];
+
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1 md:hidden">
+      {mobileTabs.map((tab) => {
+        const isActive = tab.key === active;
+        return (
+          <Link
+            key={tab.key}
+            href={`/orders?filter=${tab.key}`}
+            className={cn(
+              'shrink-0 rounded-full border px-4 py-1.5 font-sans text-sm font-medium transition-all duration-200',
+              isActive
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-surface-container-high bg-transparent text-on-surface-variant',
+            )}
+          >
+            {tab.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Desktop order card — matches order_history_dark_mode_desktop_with_redlines:
+ * [thumbnail 60px] [order ID + badge] [product name + qty] [Total Amount label + $X,XXX.XX] [CTA button]
+ * All on one horizontal row, padding 24px, radius 12px, border #262626
+ */
+function DesktopOrderCard({ order }: { order: Order }) {
+  const item = order.items[0];
+  const ctaLabel = STATUS_CTA[order.status];
+
+  // CTA variant: gold only for "Buy Again", ghost-neutral for others
+  const ctaVariant = order.status === 'shipped' ? 'ghost-gold' : 'ghost-neutral';
+
+  return (
+    <article className="hidden rounded-xl border border-surface-container-high bg-surface-container transition-colors duration-200 hover:border-outline-variant md:flex md:items-center md:gap-5 md:px-6 md:py-6">
+      {/* Thumbnail */}
+      <div className="relative size-16 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
+        <Image src={item.imageSrc} alt={item.name} fill sizes="64px" className="object-cover" />
+      </div>
+
+      {/* Order info — grows to fill */}
+      <div className="flex flex-1 flex-col gap-1 min-w-0">
+        <div className="flex items-center gap-2.5">
+          <span className="font-heading text-base text-on-surface">Order #{order.id}</span>
+          <OrderStatusBadge status={order.status} dot size="sm" />
+        </div>
+        <p className="font-mono text-[11px] text-on-surface-variant">Placed on {order.placedAt}</p>
+        <p className="mt-0.5 text-sm text-on-surface-variant">
+          {item.name}
+          <span className="ml-3 text-outline-brand">Qty: {item.qty}</span>
+        </p>
+      </div>
+
+      {/* Total amount — right-aligned label + value */}
+      <div className="flex shrink-0 flex-col items-end gap-0.5 pr-6">
+        <span className="font-mono text-[10px] uppercase tracking-widest text-on-surface-variant">Total Amount</span>
+        <span className="font-mono text-xl font-bold text-primary">{formatCurrency(order.totalAmount)}</span>
+      </div>
+
+      {/* CTA */}
+      <Link href={`/orders/${order.id}`} className="shrink-0">
+        <Button variant={ctaVariant} size="sm" className="font-mono text-[11px] uppercase tracking-widest">
+          {ctaLabel}
+        </Button>
+      </Link>
+    </article>
+  );
+}
+
+/**
+ * Mobile order card — matches order_history_dark_mode_mobile_with_redlines:
+ * - Order # + date top row, status badge top-right
+ * - Large thumbnail + product name + specs + price
+ * - 2 action buttons side by side (primary gold + secondary outline)
+ * - radius 12px, padding inside
+ */
+function MobileOrderCard({ order }: { order: Order }) {
+  const item = order.items[0];
+  const ctaLabel = STATUS_CTA[order.status];
+
+  return (
+    <article className="flex flex-col gap-4 rounded-xl border border-surface-container-high bg-surface-container p-4 md:hidden">
+      {/* Row 1: order meta + status */}
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <p className="font-mono text-[10px] font-semibold uppercase tracking-widest text-on-surface-variant">
+            Order #{order.id}
+          </p>
+          <p className="mt-0.5 font-heading text-lg leading-tight text-on-surface">{order.placedAt}</p>
         </div>
         <OrderStatusBadge status={order.status} dot size="sm" />
       </div>
 
-      {/* Item row */}
-      <div className="flex items-center gap-4 px-5 py-4">
-        <div className="relative size-16 shrink-0 overflow-hidden rounded-lg border border-surface-container-high bg-surface-container-low">
-          <Image src={order.item.imageSrc} alt={order.item.name} fill sizes="64px" className="object-cover" />
+      {/* Row 2: thumbnail + product info */}
+      <div className="flex items-start gap-3">
+        <div className="relative size-20 shrink-0 overflow-hidden rounded-lg bg-surface-container-low">
+          <Image src={item.imageSrc} alt={item.name} fill sizes="80px" className="object-cover" />
         </div>
-        <div className="flex flex-1 items-center justify-between gap-4 min-w-0">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-on-surface">{order.item.name}</p>
-            <p className="mt-0.5 font-mono text-xs text-on-surface-variant">{order.item.specs}</p>
-          </div>
-          <span className="shrink-0 font-mono text-sm font-bold text-primary">{formatCurrency(order.item.price)}</span>
+        <div className="flex flex-1 flex-col gap-1">
+          <p className="font-heading text-base leading-snug text-on-surface">{item.name}</p>
+          <p className="font-mono text-xs text-on-surface-variant">Qty: {item.qty}</p>
+          <p className="font-mono text-lg font-bold text-primary">{formatCurrency(order.totalAmount)}</p>
         </div>
       </div>
 
-      {/* Card footer — total + CTA */}
-      <div className="flex items-center justify-between border-t border-surface-container-high px-5 py-3.5">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-on-surface-variant">Total Amount</p>
-          <div className="mt-0.5 flex items-baseline gap-1.5">
-            <span className="font-mono text-base font-bold text-on-surface">{formatCurrency(order.totalAmount)}</span>
-            {order.totalNote && <span className="font-mono text-[10px] text-outline-brand">{order.totalNote}</span>}
-          </div>
-        </div>
+      {/* Row 3: 2 action buttons */}
+      <div className="grid grid-cols-2 gap-2">
         <Link href={`/orders/${order.id}`}>
-          <Button variant={action.variant} size="sm" className="font-mono text-[11px] uppercase tracking-widest">
-            {action.label}
+          <Button variant="gold" size="sm" className="w-full font-mono text-[10px] uppercase tracking-widest">
+            {ctaLabel}
+          </Button>
+        </Link>
+        <Link href={`/orders/${order.id}`}>
+          <Button variant="ghost-neutral" size="sm" className="w-full font-mono text-[10px] uppercase tracking-widest">
+            Details
           </Button>
         </Link>
       </div>
@@ -182,69 +261,55 @@ function OrderCard({ order }: { order: OrderSummary }) {
 
 // ── Page ──────────────────────────────────────────────────────────────────
 
-export default async function OrderHistoryPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  const { status = 'all' } = await searchParams;
-  const activeFilter = (FILTER_TABS.find((t) => t.value === status)?.value ?? 'all') as FilterStatus;
+interface OrdersPageProps {
+  searchParams: Promise<{ filter?: string }>;
+}
 
-  // Filter mock data (real implementation: pass status to API)
-  const orders =
-    activeFilter === 'all'
-      ? MOCK_ORDERS
-      : MOCK_ORDERS.filter(
-          (o) => o.status === activeFilter || (activeFilter === 'completed' && o.status === 'completed'),
-        );
+export default async function OrdersPage({ searchParams }: OrdersPageProps) {
+  const { filter = 'all' } = await searchParams;
+  const activeFilter = filter as FilterTab;
+
+  const filteredOrders = activeFilter === 'all' ? MOCK_ORDERS : MOCK_ORDERS.filter((o) => o.status === activeFilter);
 
   return (
-    <div className="px-8 py-8">
-      {/* ── Page header ── */}
-      <div className="mb-6 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-medium text-on-surface">Order History</h1>
-          <p className="mt-1 text-sm text-on-surface-variant">Review and manage your recent high-fidelity purchases.</p>
-        </div>
-        <Button variant="gold" size="sm" className="shrink-0 font-mono text-[11px] uppercase tracking-widest">
-          <DownloadIcon className="size-3.5" />
-          Export CSV
-        </Button>
+    <div className="flex flex-col gap-6 py-6 md:py-8">
+      {/* ── Page heading ── */}
+      <h1 className="font-heading text-4xl text-on-surface md:text-5xl">Order History</h1>
+
+      {/* ── Filters ── */}
+      <DesktopFilterTabs active={activeFilter} />
+      <MobileFilterPills active={activeFilter} />
+
+      {/* ── Order list ── */}
+      <div className="flex flex-col gap-3">
+        {filteredOrders.length === 0 ? (
+          <div className="flex items-center justify-center rounded-xl border border-surface-container-high bg-surface-container py-16">
+            <p className="font-mono text-sm text-on-surface-variant">No orders found.</p>
+          </div>
+        ) : (
+          filteredOrders.map((order) => (
+            <div key={order.id}>
+              <DesktopOrderCard order={order} />
+              <MobileOrderCard order={order} />
+            </div>
+          ))
+        )}
       </div>
 
-      {/* ── Status filter tabs ── */}
-      <nav
-        aria-label="Filter orders by status"
-        className="mb-6 flex items-center gap-1 border-b border-surface-container-high"
-      >
-        {FILTER_TABS.map((tab) => {
-          const isActive = tab.value === activeFilter;
-          return (
-            <Link
-              key={tab.value}
-              href={`/orders?status=${tab.value}`}
-              className={cn(
-                'relative pb-3 pt-1 px-3',
-                'font-mono text-[11px] font-semibold uppercase tracking-widest',
-                'transition-colors duration-200',
-                isActive ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface',
-              )}
-              aria-current={isActive ? 'page' : undefined}
-            >
-              {tab.label}
-              {/* Gold underline indicator */}
-              {isActive && (
-                <span aria-hidden className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-primary" />
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-
-      {/* ── Orders grid ── */}
-      {orders.length === 0 ? (
-        <p className="py-16 text-center font-mono text-sm text-outline-variant">No orders found.</p>
-      ) : (
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          {orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
-          ))}
+      {/* ── Pagination ── */}
+      {filteredOrders.length > 0 && (
+        <div className="flex items-center justify-between pt-2">
+          <span className="font-mono text-xs text-on-surface-variant">
+            Showing {filteredOrders.length} of 12 orders
+          </span>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost-neutral" size="icon-sm" aria-label="Previous page">
+              <ChevronLeftIcon className="size-3.5" />
+            </Button>
+            <Button variant="ghost-neutral" size="icon-sm" aria-label="Next page">
+              <ChevronRightIcon className="size-3.5" />
+            </Button>
+          </div>
         </div>
       )}
     </div>
