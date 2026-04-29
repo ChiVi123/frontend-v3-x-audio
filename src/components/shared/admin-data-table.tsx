@@ -26,7 +26,10 @@ export interface Column<T> {
   header: string;
   type?: ColumnType;
   sortable?: boolean;
-  render?: (value: T[keyof T], row: T) => React.ReactNode;
+  // render receives `unknown` so callers can narrow to their concrete row type
+  // without forcing T[keyof T] — avoids assignability errors when T is inferred
+  // as Record<string, unknown> at the component boundary.
+  render?: (value: unknown, row: T) => React.ReactNode;
   align?: 'text-left' | 'text-center' | 'text-right';
   width?: string;
 }
@@ -38,7 +41,7 @@ interface SortState {
   dir: SortDir;
 }
 
-interface AdminDataTableProps<T extends Record<string, unknown>> {
+interface AdminDataTableProps<T extends object> {
   title?: string;
   viewAllHref?: string;
   viewAllLabel?: string;
@@ -52,7 +55,7 @@ interface AdminDataTableProps<T extends Record<string, unknown>> {
 
 // ── Cell renderers ────────────────────────────────────────────────────────
 
-function renderCell<T>(col: Column<T>, row: T): React.ReactNode {
+function renderCell<T extends object>(col: Column<T>, row: T): React.ReactNode {
   const value = row[col.key];
   if (col.render) return col.render(value, row);
 
@@ -82,7 +85,7 @@ function renderCell<T>(col: Column<T>, row: T): React.ReactNode {
 
 // ── Sort helper ───────────────────────────────────────────────────────────
 
-function sortData<T>(data: T[], sort: SortState): T[] {
+function sortData<T extends object>(data: T[], sort: SortState): T[] {
   if (!sort.dir) return data;
   return [...data].sort((a, b) => {
     const av = a[sort.key as keyof T];
@@ -95,7 +98,7 @@ function sortData<T>(data: T[], sort: SortState): T[] {
 
 // ── Component ─────────────────────────────────────────────────────────────
 
-function AdminDataTable<T extends Record<string, unknown>>({
+function AdminDataTable<T extends object>({
   title,
   viewAllHref,
   viewAllLabel = 'View All',
@@ -184,7 +187,7 @@ function AdminDataTable<T extends Record<string, unknown>>({
               sorted.map((row) => (
                 // rowKey is guaranteed unique per row (id, sku, etc.)
                 <tr
-                  key={String(row[rowKey])}
+                  key={String((row as Record<string, unknown>)[rowKey])}
                   className="border-b border-surface-container-high last:border-0 transition-colors duration-150 hover:bg-surface-container-high/50"
                 >
                   {columns.map((col) => (
