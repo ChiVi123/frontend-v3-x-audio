@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Mono, Manrope, Playfair_Display } from 'next/font/google';
+import { ThemeProvider } from '~/components/shared/theme-provider';
 import './globals.css';
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -22,8 +23,6 @@ export const metadata: Metadata = {
   title: 'V3-X Audio',
   description: 'Premium Audio Equipment',
 };
-
-import { ThemeProvider } from '~/components/shared/theme-provider';
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

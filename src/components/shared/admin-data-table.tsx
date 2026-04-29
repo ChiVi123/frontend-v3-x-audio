@@ -1,3 +1,5 @@
+'use client';
+
 import {
   ChevronUpIcon as SortAscIcon,
   ArrowUpDownIcon as SortBothIcon,
